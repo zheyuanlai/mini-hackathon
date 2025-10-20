@@ -1,0 +1,30 @@
+# python
+.python-version
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv/
+env/
+
+# mac
+.DS_Store
+
+# latex
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.out
+*.snm
+*.toc
+*.bbl
+*.blg
+*.lof
+*.lot
+*.idx
+*.ilg
+*.dvi
