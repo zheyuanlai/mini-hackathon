@@ -11,6 +11,9 @@ env/
 # mac
 .DS_Store
 
+# local outputs
+artifacts/
+
 # latex
 *.aux
 *.log
@@ -28,3 +31,4 @@ env/
 *.idx
 *.ilg
 *.dvi
+*.xdv
