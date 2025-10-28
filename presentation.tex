@@ -93,21 +93,77 @@ age\_group & categorical & young/middle/senior \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Regression \& Modeling Approach}
+\begin{frame}{Modeling Approach: Linear Regression}
+\textbf{Ordinary Least Squares (OLS)}
 \begin{itemize}
-\item \textbf{Baseline Models}:
-  \begin{itemize}
-  \item Linear Regression: Interpretable, assumes linearity
-  \item Decision Tree: Handles non-linearities, prone to overfitting
-  \item Random Forest: Ensemble of trees (R²=0.865)
-  \end{itemize}
-\item \textbf{Advanced Optimization}:
-  \begin{itemize}
-  \item \textbf{Optuna}: Bayesian hyperparameter tuning (20 trials)
-  \item \textbf{Random Forest (Optuna)}: Optimized forest (R²=0.879)
-  \item \textbf{XGBoost (Optuna)}: Gradient boosting (R²=0.879)
-  \end{itemize}
-\item \textbf{Evaluation}: R², RMSE, MAE; 5-fold cross-validation
+\item \textbf{Model}: $\hat{y} = \beta_0 + \sum_{j=1}^{p} \beta_j x_j$
+\item \textbf{Objective}: Minimize sum of squared residuals
+  $$\min_{\boldsymbol{\beta}} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 = \min_{\boldsymbol{\beta}} \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|^2$$
+\item \textbf{Closed-form solution}: $\hat{\boldsymbol{\beta}} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}$
+\item \textbf{Assumptions}: Linearity, homoscedasticity, independence, normality
+\item \textbf{Advantages}: Fast, interpretable coefficients, well-understood
+\item \textbf{Limitations}: Cannot capture non-linear interactions (e.g., smoker × BMI)
+\item \textbf{Test Performance}: R²=0.787, RMSE=\$5,747
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Modeling Approach: Decision Tree}
+\textbf{Recursive Binary Partitioning}
+\begin{itemize}
+\item \textbf{Algorithm}: CART (Classification and Regression Trees)
+\item \textbf{Splitting criterion}: Minimize variance at each node
+  $$\text{MSE}_{\text{node}} = \frac{1}{n_{\text{node}}} \sum_{i \in \text{node}} (y_i - \bar{y}_{\text{node}})^2$$
+\item \textbf{Feature selection}: Choose split that maximizes variance reduction
+  $$\Delta = \text{MSE}_{\text{parent}} - \left(\frac{n_{\text{left}}}{n} \text{MSE}_{\text{left}} + \frac{n_{\text{right}}}{n} \text{MSE}_{\text{right}}\right)$$
+\item \textbf{Advantages}: Non-linear, handles interactions, interpretable rules
+\item \textbf{Limitations}: High variance (overfitting), unstable to data perturbations
+\item \textbf{Test Performance}: R²=0.740, RMSE=\$6,354
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Modeling Approach: Random Forest}
+\textbf{Bootstrap Aggregating (Bagging) of Decision Trees}
+\begin{itemize}
+\item \textbf{Ensemble method}: Train $B$ trees on bootstrap samples
+  $$\hat{y}_{\text{RF}} = \frac{1}{B} \sum_{b=1}^{B} \hat{y}_b(\mathbf{x})$$
+\item \textbf{Feature randomness}: At each split, consider random subset of $\sqrt{p}$ features
+\item \textbf{Variance reduction}: Decorrelates trees, reduces overfitting
+  $$\text{Var}(\bar{X}) = \frac{\sigma^2}{B} \quad \text{(for independent trees)}$$
+\item \textbf{Out-of-bag (OOB) error}: Internal validation using ~37\% held-out samples
+\item \textbf{Advantages}: Robust, handles high-dimensional data, reduces overfitting
+\item \textbf{Baseline Performance}: R²=0.865, RMSE=\$4,574
+\item \textbf{Optuna-tuned}: R²=0.879, RMSE=\$4,327 (+1.4\% improvement)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Modeling Approach: XGBoost}
+\textbf{Gradient Boosting with Regularization}
+\begin{itemize}
+\item \textbf{Additive model}: Build trees sequentially to correct residuals
+  $$\hat{y}^{(t)} = \hat{y}^{(t-1)} + \eta \cdot f_t(\mathbf{x})$$
+  where $\eta$ is the learning rate, $f_t$ is the $t$-th tree
+\item \textbf{Objective function}: Loss + regularization
+  $$\mathcal{L}^{(t)} = \sum_{i=1}^{n} \ell(y_i, \hat{y}_i^{(t)}) + \Omega(f_t)$$
+  $$\Omega(f) = \gamma T + \frac{1}{2}\lambda \|\mathbf{w}\|^2 + \alpha \|\mathbf{w}\|_1$$
+  ($T$ = \# leaves, $\mathbf{w}$ = leaf weights, $\gamma, \lambda, \alpha$ = regularization)
+\item \textbf{Second-order approximation}: Uses gradient and Hessian for faster convergence
+\item \textbf{Advantages}: State-of-the-art accuracy, handles missing data, parallelized
+\item \textbf{Optuna-tuned Performance}: R²=0.879, RMSE=\$4,331
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Evaluation Metrics}
+\textbf{Regression Performance Measures}
+\begin{itemize}
+\item \textbf{Coefficient of Determination (R²)}:
+  $$R^2 = 1 - \frac{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2} = 1 - \frac{\text{SS}_{\text{res}}}{\text{SS}_{\text{tot}}}$$
+  Proportion of variance explained by the model (0 to 1, higher is better)
+\item \textbf{Root Mean Squared Error (RMSE)}:
+  $$\text{RMSE} = \sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}$$
+  Average prediction error in dollars (lower is better, sensitive to outliers)
+\item \textbf{Mean Absolute Error (MAE)}:
+  $$\text{MAE} = \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y}_i|$$
+  Median-like error metric (lower is better, robust to outliers)
 \end{itemize}
 \end{frame}
 
