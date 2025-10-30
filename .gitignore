@@ -32,3 +32,6 @@ artifacts/
 *.ilg
 *.dvi
 *.xdv
+
+presentation.tex
+presentation.pdf
